@@ -11,7 +11,6 @@
 #include <algorithm>
 #include <cctype>
 #include <cmath>
-#include <cstdio>
 #include <cstdlib>
 #include <initializer_list>
 
@@ -21,6 +20,7 @@
 namespace {
 
 using namespace app_render;
+using namespace std;
 
 constexpr float kPi = 3.14159265f;
 constexpr float kDegToRad = kPi / 180.0f;
@@ -46,9 +46,7 @@ struct AppState {
     int windowH = 720;
     int lastMouseX = 0;
     int lastMouseY = 0;
-    int lastTime = 0;
     bool leftDown = false;
-    bool rightDown = false;
     float camAzimuth = 35.0f;
     float camElevation = 22.0f;
     float camDistance = 22.0f;
@@ -57,25 +55,24 @@ struct AppState {
 class Crane {
 public:
     void init() {
-        fileTexturesLoaded_ = 0;
         textures_.metal = createSolidTexture(150, 150, 150);
         textures_.concrete = createSolidTexture(130, 130, 130);
         textures_.boom = createSolidTexture(170, 140, 80);
         textures_.hook = createSolidTexture(90, 90, 90);
         textures_.cargo = createSolidTexture(120, 120, 120);
         textures_.cab = createSolidTexture(160, 160, 160);
-        tryLoad(textures_.metal, {"assets/textures/roof1.bmp", "assets/textures/b.bmp"});
-        tryLoad(textures_.concrete, {"assets/textures/bricks.bmp", "assets/textures/c.bmp"});
+        tryLoad(textures_.metal, {"assets/textures/roof1.bmp", "assets/textures/bricks.bmp"});
+        tryLoad(textures_.concrete, {"assets/textures/bricks.bmp", "assets/textures/roof1.bmp"});
         tryLoad(textures_.boom, {"assets/textures/roof.bmp", "assets/textures/bricks1.bmp"});
-        tryLoad(textures_.hook, {"assets/textures/b.bmp", "assets/textures/roof1.bmp"});
+        tryLoad(textures_.hook, {"assets/textures/roof1.bmp", "assets/textures/bricks1.bmp"});
         tryLoad(textures_.cargo, {"assets/textures/door.bmp", "assets/textures/window1.bmp"});
         tryLoad(textures_.cab, {"assets/textures/window.bmp", "assets/textures/window1.bmp"});
     }
 
     void update() {
-        state_.boomAngle = std::clamp(state_.boomAngle, -10.0f, 75.0f);
-        state_.cableLength = std::clamp(state_.cableLength, 1.5f, 8.0f);
-        state_.trolleyPos = std::clamp(state_.trolleyPos, 0.1f, 0.95f);
+        state_.boomAngle = clamp(state_.boomAngle, -10.0f, 75.0f);
+        state_.cableLength = clamp(state_.cableLength, 1.5f, 8.0f);
+        state_.trolleyPos = clamp(state_.trolleyPos, 0.1f, 0.95f);
     }
 
     void rotateBase(float deg) { state_.baseRotation += deg; }
@@ -84,7 +81,6 @@ public:
     void moveTrolley(float d) { state_.trolleyPos += d; }
     CraneState& state() { return state_; }
     const CraneState& state() const { return state_; }
-    int fileTexturesLoaded() const { return fileTexturesLoaded_; }
 
     void draw() const {
         drawBase();
@@ -97,13 +93,11 @@ public:
 private:
     CraneState state_;
     CraneTextures textures_;
-    int fileTexturesLoaded_ = 0;
 
-    void tryLoad(unsigned int& slot, std::initializer_list<const char*> paths) {
+    void tryLoad(unsigned int& slot, initializer_list<const char*> paths) {
         for (const char* p : paths) {
             if (unsigned int t = loadTextureFromAssets(p)) {
                 slot = t;
-                ++fileTexturesLoaded_;
                 return;
             }
         }
@@ -123,8 +117,6 @@ private:
         glPushMatrix();
         glRotatef(state_.baseRotation, 0.0f, 1.0f, 0.0f);
         drawBox(2.8f, 0.3f, 2.8f, textures_.concrete, 2.0f);
-        glTranslatef(0.0f, 0.3f, 0.0f);
-        drawBox(1.35f, 0.35f, 1.35f, textures_.metal, 1.0f);
         glPopMatrix();
     }
 
@@ -132,8 +124,6 @@ private:
         glPushMatrix();
         glRotatef(state_.baseRotation, 0.0f, 1.0f, 0.0f);
         drawBox(0.95f, 4.8f, 0.95f, textures_.metal, 2.5f);
-        glTranslatef(0.0f, 4.8f, 0.0f);
-        drawBox(1.55f, 0.45f, 1.2f, textures_.metal, 1.0f);
         glPopMatrix();
     }
 
@@ -141,7 +131,8 @@ private:
         glPushMatrix();
         glRotatef(state_.baseRotation, 0.0f, 1.0f, 0.0f);
         glTranslatef(0.0f, 4.8f, 0.0f);
-        drawBox(1.3f, 0.9f, 1.2f, textures_.cab, 1.0f);
+        glTranslatef(-0.22f, 0.0f, 0.0f);
+        drawBox(1.75f, 0.9f, 1.2f, textures_.cab, 1.0f);
         glPopMatrix();
     }
 
@@ -151,7 +142,10 @@ private:
         glRotatef(state_.baseRotation, 0.0f, 1.0f, 0.0f);
         glTranslatef(0.0f, 5.25f, 0.0f);
         glRotatef(state_.boomAngle, 0.0f, 0.0f, 1.0f);
-        drawBox(0.45f, 0.45f, 0.75f, textures_.metal, 1.0f);
+        glPushMatrix();
+        glTranslatef(-0.18f, 0.0f, 0.0f);
+        drawBox(0.78f, 0.45f, 0.75f, textures_.metal, 1.0f);
+        glPopMatrix();
         glPushMatrix();
         glTranslatef(boomLen * 0.5f, 0.0f, 0.0f);
         drawBox(boomLen, 0.4f, 0.6f, textures_.boom, 4.0f);
@@ -161,11 +155,6 @@ private:
         glTranslatef(boomLen * state_.trolleyPos, -0.33f, 0.0f);
         drawBox(0.55f, 0.42f, 0.6f, textures_.metal, 1.0f);
         glPopMatrix();
-
-        glPushMatrix();
-        glTranslatef(-1.0f, 0.08f, 0.0f);
-        drawBox(1.15f, 0.7f, 0.75f, textures_.concrete, 1.0f);
-        glPopMatrix();
         glPopMatrix();
     }
 
@@ -173,8 +162,8 @@ private:
         const float boomLen = 7.5f;
         const float trolleyYOffset = -0.33f;
         float r = state_.boomAngle * kDegToRad;
-        float px = std::cos(r) * boomLen * state_.trolleyPos;
-        float py = 5.25f + std::sin(r) * boomLen * state_.trolleyPos + trolleyYOffset;
+        float px = cos(r) * boomLen * state_.trolleyPos;
+        float py = 5.25f + sin(r) * boomLen * state_.trolleyPos + trolleyYOffset;
 
         glPushMatrix();
         glRotatef(state_.baseRotation, 0.0f, 1.0f, 0.0f);
@@ -191,14 +180,6 @@ private:
         glPushMatrix();
         glTranslatef(0.0f, -state_.cableLength, 0.0f);
         drawBox(0.3f, 0.3f, 0.3f, textures_.hook, 1.0f);
-        glPushMatrix();
-        glTranslatef(0.0f, -0.28f, -0.18f);
-        drawBox(0.1f, 0.35f, 0.1f, textures_.hook, 1.0f);
-        glPopMatrix();
-        glPushMatrix();
-        glTranslatef(0.0f, -0.28f, 0.18f);
-        drawBox(0.1f, 0.35f, 0.1f, textures_.hook, 1.0f);
-        glPopMatrix();
         glPopMatrix();
 
         glPushMatrix();
@@ -215,27 +196,13 @@ unsigned int gGroundTex = 0;
 unsigned int gSkyTex = 0;
 unsigned int gSkyTopTex = 0;
 
-float clampf(float v, float lo, float hi) { return std::max(lo, std::min(v, hi)); }
-
-void setupLighting() {
-    glEnable(GL_LIGHTING);
-    glEnable(GL_LIGHT0);
-    glEnable(GL_LIGHT1);
-    glEnable(GL_COLOR_MATERIAL);
-    glColorMaterial(GL_FRONT, GL_AMBIENT_AND_DIFFUSE);
-    GLfloat amb[] = {0.25f, 0.25f, 0.28f, 1.0f}, dif[] = {0.85f, 0.85f, 0.88f, 1.0f};
-    GLfloat spec[] = {0.6f, 0.6f, 0.65f, 1.0f}, p0[] = {8.0f, 14.0f, 6.0f, 1.0f}, p1[] = {-10.0f, 8.0f, -8.0f, 1.0f};
-    GLfloat fill[] = {0.35f, 0.38f, 0.45f, 1.0f};
-    glLightfv(GL_LIGHT0, GL_AMBIENT, amb); glLightfv(GL_LIGHT0, GL_DIFFUSE, dif); glLightfv(GL_LIGHT0, GL_SPECULAR, spec); glLightfv(GL_LIGHT0, GL_POSITION, p0);
-    glLightfv(GL_LIGHT1, GL_DIFFUSE, fill); glLightfv(GL_LIGHT1, GL_POSITION, p1);
-    glEnable(GL_NORMALIZE);
-}
+float clampf(float v, float lo, float hi) { return max(lo, min(v, hi)); }
 
 void setupCamera() {
     float az = gApp.camAzimuth * kPi / 180.0f, el = gApp.camElevation * kPi / 180.0f;
-    float ex = gApp.camDistance * std::cos(el) * std::sin(az);
-    float ey = gApp.camDistance * std::sin(el) + 3.0f;
-    float ez = gApp.camDistance * std::cos(el) * std::cos(az);
+    float ex = gApp.camDistance * cos(el) * sin(az);
+    float ey = gApp.camDistance * sin(el) + 3.0f;
+    float ez = gApp.camDistance * cos(el) * cos(az);
     gluLookAt(ex, ey, ez, 0.0f, 3.0f, 0.0f, 0.0f, 1.0f, 0.0f);
 }
 
@@ -276,7 +243,7 @@ void drawSky() {
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
+    glDisable(GL_LIGHTING);
 }
 
 void drawHud() {
@@ -293,48 +260,17 @@ void drawHud() {
     glPushMatrix();
     glLoadIdentity();
 
-    // Nen HUD dam de tang tuong phan
-    const int hudH = 104;
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-    glColor4f(0.0f, 0.0f, 0.0f, 0.55f);
-    glBegin(GL_QUADS);
-    glVertex2i(0, gApp.windowH);
-    glVertex2i(gApp.windowW, gApp.windowH);
-    glVertex2i(gApp.windowW, gApp.windowH - hudH);
-    glVertex2i(0, gApp.windowH - hudH);
-    glEnd();
-    glDisable(GL_BLEND);
-
-    const CraneState& s = gCrane.state();
-    char line4[256];
-    std::snprintf(line4, sizeof(line4),
-        "TEXTURE: %d/6  |  GOC COT: %.1f  |  GOC CAN: %.1f  |  CAP: %.1f  |  XE CON: %.0f%%",
-        gCrane.fileTexturesLoaded(), s.baseRotation, s.boomAngle, s.cableLength, s.trolleyPos * 100.0f);
-
     const char* lines[] = {
-        "MO PHONG CAU TRUC (OPENGL + GLUT + TEXTURE)",
         "A/D: XOAY COT  |  W/S: NANG/HA CAN  |  Q/E: CAP LEN/XUONG",
-        "J/L: XE CON  |  CHUOT TRAI: XOAY CAMERA  |  CHUOT PHAI: ZOOM",
-        line4
-    };
-
-    auto drawLine = [](int x, int y, const char* text) {
-        // Bong den
-        glColor3f(0.0f, 0.0f, 0.0f);
-        glRasterPos2i(x + 1, y - 1);
-        for (const char* p = text; *p; ++p) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *p);
-        // Chu vang sang + ve lai lech 1px de day net hon
-        glColor3f(1.0f, 0.95f, 0.15f);
-        glRasterPos2i(x, y);
-        for (const char* p = text; *p; ++p) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *p);
-        glRasterPos2i(x + 1, y);
-        for (const char* p = text; *p; ++p) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *p);
+        "J/L: XE CON  |  CHUOT TRAI: XOAY CAMERA  |  CON LAN: ZOOM",
+        "R: RESET  |  ESC: THOAT"
     };
 
     int y = gApp.windowH - 24;
+    glColor3f(1.0f, 1.0f, 1.0f);
     for (const char* line : lines) {
-        drawLine(14, y, line);
+        glRasterPos2i(14, y);
+        for (const char* p = line; *p; ++p) glutBitmapCharacter(GLUT_BITMAP_HELVETICA_18, *p);
         y -= 24;
     }
 
@@ -343,7 +279,7 @@ void drawHud() {
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_LIGHTING);
+    glDisable(GL_LIGHTING);
     glEnable(GL_TEXTURE_2D);
 }
 
@@ -353,7 +289,7 @@ void display() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     setupCamera();
-    setupLighting();
+    glDisable(GL_LIGHTING);
     drawGround();
     gCrane.draw();
     drawHud();
@@ -386,8 +322,8 @@ void applyControl(unsigned char key) {
 }
 
 void keyboard(unsigned char key, int, int) {
-    if (key == 27) std::exit(0);
-    unsigned char k = static_cast<unsigned char>(std::tolower(key));
+    if (key == 27) exit(0);
+    unsigned char k = static_cast<unsigned char>(tolower(key));
     if (k == 'r') gCrane.state() = CraneState{};
     else applyControl(k);
     gCrane.update();
@@ -407,8 +343,17 @@ void specialKeys(int key, int, int) {
 }
 
 void mouse(int button, int state, int x, int y) {
+    if (state == GLUT_DOWN && button == 3) {  // wheel up
+        gApp.camDistance = clampf(gApp.camDistance - 1.0f, 8.0f, 50.0f);
+        glutPostRedisplay();
+        return;
+    }
+    if (state == GLUT_DOWN && button == 4) {  // wheel down
+        gApp.camDistance = clampf(gApp.camDistance + 1.0f, 8.0f, 50.0f);
+        glutPostRedisplay();
+        return;
+    }
     if (button == GLUT_LEFT_BUTTON) gApp.leftDown = (state == GLUT_DOWN);
-    if (button == GLUT_RIGHT_BUTTON) gApp.rightDown = (state == GLUT_DOWN);
     gApp.lastMouseX = x;
     gApp.lastMouseY = y;
 }
@@ -421,17 +366,7 @@ void motion(int x, int y) {
         gApp.camAzimuth += dx * 0.4f;
         gApp.camElevation = clampf(gApp.camElevation + dy * 0.25f, 5.0f, 80.0f);
     }
-    if (gApp.rightDown) gApp.camDistance = clampf(gApp.camDistance - dy * 0.05f, 8.0f, 50.0f);
     glutPostRedisplay();
-}
-
-void timer(int) {
-    int now = glutGet(GLUT_ELAPSED_TIME);
-    if (gApp.lastTime == 0) gApp.lastTime = now;
-    gApp.lastTime = now;
-    gCrane.update();
-    glutPostRedisplay();
-    glutTimerFunc(16, timer, 0);
 }
 
 void initGL() {
@@ -461,7 +396,6 @@ int main(int argc, char** argv) {
     glutSpecialFunc(specialKeys);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
-    glutTimerFunc(16, timer, 0);
     glutMainLoop();
     return 0;
 }
