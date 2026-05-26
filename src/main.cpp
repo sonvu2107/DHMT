@@ -1,13 +1,6 @@
 #include <GL/freeglut.h>
 #include <GL/glu.h>
 
-#ifdef _WIN32
-#ifndef NOMINMAX
-#define NOMINMAX
-#endif
-#include <windows.h>
-#endif
-
 #include <algorithm>
 #include <cctype>
 #include <cmath>
@@ -194,7 +187,6 @@ Crane gCrane;
 AppState gApp;
 unsigned int gGroundTex = 0;
 unsigned int gSkyTex = 0;
-unsigned int gSkyTopTex = 0;
 
 float clampf(float v, float lo, float hi) { return max(lo, min(v, hi)); }
 
@@ -211,7 +203,6 @@ void drawGround() {
     glColor3f(1.0f, 1.0f, 1.0f);
     const float s = 30.0f;
     glBegin(GL_QUADS);
-    glNormal3f(0.0f, 1.0f, 0.0f);
     glTexCoord2f(0.0f, 0.0f); glVertex3f(-s, 0.0f, -s);
     glTexCoord2f(12.0f, 0.0f); glVertex3f(s, 0.0f, -s);
     glTexCoord2f(12.0f, 12.0f); glVertex3f(s, 0.0f, s);
@@ -236,14 +227,12 @@ void drawSky() {
     glTexCoord2f(0,0); glVertex3f( s,-s,-s); glTexCoord2f(1,0); glVertex3f( s,-s, s); glTexCoord2f(1,1); glVertex3f( s, s, s); glTexCoord2f(0,1); glVertex3f( s, s,-s);
     glEnd();
 
-    bindTexture(gSkyTopTex != 0 ? gSkyTopTex : gSkyTex);
     glBegin(GL_QUADS);
     glTexCoord2f(0,0); glVertex3f(-s, s,-s); glTexCoord2f(1,0); glVertex3f(s, s,-s); glTexCoord2f(1,1); glVertex3f(s, s, s); glTexCoord2f(0,1); glVertex3f(-s, s, s);
     glEnd();
 
     glDepthMask(GL_TRUE);
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
 }
 
 void drawHud() {
@@ -279,7 +268,6 @@ void drawHud() {
     glPopMatrix();
     glMatrixMode(GL_MODELVIEW);
     glEnable(GL_DEPTH_TEST);
-    glDisable(GL_LIGHTING);
     glEnable(GL_TEXTURE_2D);
 }
 
@@ -289,7 +277,6 @@ void display() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     setupCamera();
-    glDisable(GL_LIGHTING);
     drawGround();
     gCrane.draw();
     drawHud();
@@ -372,13 +359,11 @@ void motion(int x, int y) {
 void initGL() {
     glClearColor(0.55f, 0.78f, 0.95f, 1.0f);
     glEnable(GL_DEPTH_TEST);
-    glShadeModel(GL_SMOOTH);
     glEnable(GL_TEXTURE_2D);
     gGroundTex = loadTextureFromAssets("assets/textures/roof1.bmp");
     if (gGroundTex == 0) gGroundTex = loadTextureFromAssets("assets/textures/roof.bmp");
     if (gGroundTex == 0) gGroundTex = createSolidTexture(90, 90, 90);
     gSkyTex = loadTextureFromAssets("assets/textures/sky.bmp");
-    gSkyTopTex = loadTextureFromAssets("assets/textures/skytop.bmp");
     gCrane.init();
 }
 
