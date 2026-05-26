@@ -1,76 +1,33 @@
-# Mo phong Cau truc (Crane Simulation)
+# Mo phong Cau truc (GLUT thuan, khong CMake)
 
-Du an mo phong cau truc xay dung bang **C++**, **OpenGL**, **freeglut** va **texture mapping**.
+Project nay giong phong cach bai Ha Manh Toan: code C++ + OpenGL/GLUT chay truc tiep, khong dung CMake.
 
-## Tinh nang
+## Cau truc hien tai
 
-- Mo hinh cau truc tower crane: de quay, cot, buong dieu khien, can cau, cap va moc
-- Texture procedural (kim loai, be tong, caro) + ho tro load file PNG/JPG
-- Anh sang va vat lieu co ban
-- Dieu khien tu ban phim va chuot
+- `src/main.cpp`: toan bo logic (model, render, input, texture load)
+- `include/stb_image.h`: doc anh BMP/PNG/JPG
+- `assets/textures/*.bmp`: texture su dung cho co, troi, than may
+- `.vscode/tasks.json`: lenh build nhanh trong VS Code
 
 ## Dieu khien
 
-| Phim | Chuc nang |
-|------|-----------|
-| `A` / `D` hoac mui ten trai/phai | Xoay cot cau |
-| `W` / `S` hoac mui ten len/xuong | Nang / ha can cau |
-| `Q` / `E` | Rut / tha cap |
-| `J` / `L` | Di chuyen xe con tren can |
-| `R` | Reset ve trang thai ban dau |
-| Chuot trai + keo | Xoay camera |
-| Chuot phai + keo | Zoom camera |
-| `ESC` | Thoat |
+- `A` / `D`: xoay cot
+- `W` / `S`: nang/ha can
+- `Q` / `E`: rut/tha cap
+- `J` / `L`: dich xe con tren can
+- `R`: reset trang thai
+- Chuot trai + keo: xoay camera
+- Chuot phai + keo: zoom
+- `ESC`: thoat
 
-## Cai dat dependencies (Windows)
-
-Du an tu dong build **freeglut** tu source tai `D:/freeglut-3.4.0` (co the doi bang `-DFREEGLUT_ROOT=...`).
-
-### Build bang Visual Studio 2026
+## Build va chay (MSYS2 UCRT64)
 
 ```powershell
-cd C:\Users\ADMIN\Desktop\KTDH
-
-cmake -B build -G "Visual Studio 18 2026" -A x64 "-DCMAKE_POLICY_VERSION_MINIMUM=3.5"
-cmake --build build --config Release
-
-# Chay
-.\build\Release\crane_sim.exe
+C:\msys64\ucrt64\bin\g++.exe -std=c++17 -O2 -Iinclude src\main.cpp -LC:\msys64\ucrt64\lib -lfreeglut -lopengl32 -lglu32 -lwinmm -o build\crane_sim.exe
+.\build\crane_sim.exe
 ```
 
-### Hoac dung vcpkg
+## Build bang VS Code
 
-```powershell
-vcpkg install freeglut:x64-windows
-cmake -B build -DCMAKE_TOOLCHAIN_FILE=C:\path\to\vcpkg\scripts\buildsystems\vcpkg.cmake -DFREEGLUT_ROOT=NONEXISTENT
-cmake --build build --config Release
-```
-
-## Texture tu file
-
-Dat file PNG/JPG vao `assets/textures/ground.png` de dung lam texture mat dat. Neu khong co file, chuong trinh tu tao texture procedural.
-
-## Cau truc thu muc
-
-```
-KTDH/
-├── CMakeLists.txt
-├── README.md
-├── assets/
-│   └── textures/        # (tuy chon) ground.png
-├── include/
-│   ├── crane.h
-│   ├── texture.h
-│   └── stb_image.h
-└── src/
-    ├── main.cpp         # GLUT window, camera, input
-    ├── crane.cpp        # Mo hinh cau truc
-    └── texture.cpp      # Tao/load texture
-```
-
-## Mo rong goi y
-
-- Them vat ly cap (dao dong, va cham)
-- Animation tu dong nang ha vat
-- Load mo hinh 3D (.obj) thay vi primitive
-- Chuyen sang OpenGL modern (shader, VBO/VAO)
+- Dung task mac dinh trong `.vscode/tasks.json` (Ctrl+Shift+B).
+- Output EXE se nam trong thu muc `build/`.
